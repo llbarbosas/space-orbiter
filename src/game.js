@@ -5,6 +5,7 @@ export default class Game {
 
     static loop({ ctx, width, height }){
         // Setup
+        const TimeDifference = this.FPS/1000;
         const player = new Ship(width/2, height/2);
         document.addEventListener("keydown", player.onKeydown);
         document.addEventListener("keyup", player.onKeyup);
@@ -15,7 +16,9 @@ export default class Game {
             ctx.fillStyle = "black";
             ctx.fillRect(0, 0, width, height);
 
-            player.update({ width, height });
+            player.applyForce({x: 4, y: 0});
+
+            player.update({ width, height, TimeDifference });
             player.draw(ctx);
         }
     }
