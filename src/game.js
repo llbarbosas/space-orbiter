@@ -16,8 +16,6 @@ export default class Game {
             ctx.fillStyle = "black";
             ctx.fillRect(0, 0, width, height);
 
-            player.applyForce({x: 4, y: 0});
-
             player.update({ width, height, TimeDifference });
             player.draw(ctx);
         }

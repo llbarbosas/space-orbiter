@@ -3,8 +3,8 @@ import Angle from './angle';
 
 const FPS = 60;
 const TURN_SPEED = 360;
-const FRICTION = 0.01;
-const SHIP_THRUST = 0.001;
+const FRICTION = 0.8;
+const SHIP_THRUST = 1;
 const MAX_ACCELERATION_MAGNITUDE = 50;
 
 export default class Ship {
@@ -14,9 +14,10 @@ export default class Ship {
         this.acceleration = new Vector2D();
         this.forces = new Vector2D();
         
-        this.mass = 10;
+        this.mass = 1;
 
-        this.thrust = new Vector2D();
+        this.thrust = 0;
+        this.friction = 0;
         this.isThrusting = false;
 
         this.size = 10;
@@ -59,23 +60,21 @@ export default class Ship {
     }
 
     update({ width, height, TimeDifference: dt }) {
+        console.log(`Forces: ${this.forces}\nAcc: ${this.acceleration}\nVel: ${this.velocity}\nPosition: ${this.position}`);
+
         if (this.isThrusting) {
-           /*
-            const thrust = new Vector2D(
-                this.angle.cos(), 
-                -this.angle.sin()
-            ).scale(SHIP_THRUST/FPS);
-            */
-
-            // this.forces.add(thrust);
+            this.thrust += 0.5;
+            this.friction = this.thrust * 0.4;
         } else {
+            this.thrust = 0;
 
-            // this.forces.add(friction);
+            if(this.friction > 0)
+                this.friction -= 0.5;
         }
 
         this.angle.add(this.rotation);
 
-        console.log(`Forces: ${this.forces}\nAcc: ${this.acceleration}\nVel: ${this.velocity}\nPosition: ${this.position}`);
+        // this.forces.add(this.thrust).add(this.friction);
 
         this.acceleration = this.forces.copy().scale(1 / this.mass);
 
@@ -120,5 +119,18 @@ export default class Ship {
 
         canvasContext.fillStyle = "red";
         canvasContext.fillRect(this.position.x - 1, this.position.y - 1, 2, 2);
+
+        const direction = new Vector2D(this.angle.cos(), -this.angle.sin());
+
+        const testThrust = this.position.copy().add(direction.copy().scale(this.thrust));
+        const testFriction = this.position.copy().sub(direction.copy().scale(this.friction));
+
+        canvasContext.fillStyle = "green";
+        canvasContext.fillRect(testThrust.x, testThrust.y, 5, 5);
+
+        canvasContext.fillStyle = "blue";
+        canvasContext.fillRect(testFriction.x, testFriction.y, 5, 5);
+
+        console.log(`Thrust: ${testThrust}\nFriction: ${testFriction}`);
     }
 }
