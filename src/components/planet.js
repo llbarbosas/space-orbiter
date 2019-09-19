@@ -3,7 +3,9 @@ import Vector2D from './Vector2D';
 export default class Planet {
     constructor(x, y) {
         this.position = new Vector2D(x, y);
+        
         this.radius = 50;
+        this.mass = 10;
     }
 
     update({ width, height, TimeDifference: TD }) {

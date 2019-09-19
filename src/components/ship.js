@@ -1,9 +1,10 @@
 import Vector2D from './Vector2D';
 import Angle from './angle';
 import * as canvasHelper from './helpers/canvas';
+import * as physicsHelper from './helpers/physics';
 
 const TURN_SPEED = 360;
-const FRICTION = 0.3;
+const FRICTION = 0.8;
 const SHIP_THRUST = 80;
 
 export default class Ship {
@@ -13,7 +14,8 @@ export default class Ship {
         this.acceleration = new Vector2D();
         this.forces = {
             thrust: new Vector2D(),
-            friction: new Vector2D()
+            friction: new Vector2D(),
+            gravity: new Vector2D()
         }
         this.isThrusting = false;
         
@@ -82,7 +84,7 @@ export default class Ship {
         return Object.values(this.forces).reduce((forces, force) => forces.add(force), new Vector2D());
     }
 
-    update({ width, height, TimeDifference: TD }) {
+    update({ width, height, timeDifference: TD, gameContext }) {
         // Handle thruster and ship friction
         const shipDirection = new Vector2D(this.angle.cos(), -this.angle.sin());
 
@@ -92,6 +94,17 @@ export default class Ship {
             this.forces.thrust = new Vector2D();
         
         this.forces.friction = this.velocity.copy().scale(-FRICTION);
+
+        // Gravity
+        gameContext
+            .filter(element => element != this)
+            .forEach(element => {
+                const distanceBetween = physicsHelper.distanceBetween(this.position, element.position);
+                const gravityForce = physicsHelper.newtonGravityLaw(this.mass, element.mass, distanceBetween);
+                const gravityForceVector = distanceBetween.norm().scale(gravityForce);
+
+                this.forces.gravity.add(gravityForceVector);
+            });
 
         // Physics 
         this.angle.add(this.rotation.copy().scale(TD));
@@ -120,16 +133,17 @@ export default class Ship {
 
         canvasHelper.drawCircle(canvasContext, this.position.x, this.position.y, 4, "red");
 
-        const realThrust = this.position.copy().add(this.forces.thrust.copy().scale(1));
-        const realFriction = this.position.copy().add(this.forces.friction.copy().scale(1));
-        const realVelocity = this.position.copy().add(this.velocity.copy().scale(1));
+        const realThrust = this.position.copy().add(this.forces.thrust);
+        const realFriction = this.position.copy().add(this.forces.friction);
+        const realVelocity = this.position.copy().add(this.velocity);
+        const realGravity = this.position.copy().add(this.gravity);
         const realResultant = this.position.copy().add(this.computeTotalForces());
 
         this.representForce(canvasContext, realThrust, "green");
         this.representForce(canvasContext, realFriction, "blue");
         this.representForce(canvasContext, realResultant, "purple");
-        this.representForce(canvasContext, realVelocity, "yellow");
-
+        this.representForce(canvasContext, realGravity, "yellow");
+        this.representForce(canvasContext, realVelocity, "cyan");
     }
 
     drawShip(ctx){
