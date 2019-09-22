@@ -23,6 +23,10 @@ export default class Vector2D {
     scale(factorX, factorY = factorX) {
         this.x *= factorX;
         this.y *= factorY;
+        
+        if(isNaN(this.magnitude()))
+            return new Vector2D();
+
         return this;
     }
 
